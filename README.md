@@ -59,6 +59,19 @@ their own row in `session_notes`. Policies are in the init migration and verifie
 
 To make a user a coach: create the auth user, then insert `(id, name)` into `public.coaches` with the service role.
 
+## Sides and rigging
+
+Each boat is drawn top down, bow at the top, with an oar on the side each seat is rigged. Two things can change
+when a rower switches sides, and the UI keeps them separate:
+
+- The seat's rigging, per lineup. Click an oar (or the empty slot opposite it) to move that seat's oar; the boat
+  menu offers Flip all oars and Standard rig. Stored in `boat_config.rigging`, cloned with the lineup.
+- The rower's own side (port, starboard, both), a roster fact that applies everywhere. Change it from the roster
+  page, from the roster sidebar menu on a session, or from the mismatch flag on a seat.
+
+A dashed oar plus a flag marks a rower seated on a side they do not row. The flag opens a menu with the fixes
+for that seat: re-rig the seat, or mark the rower as rowing that side or both.
+
 ## Scripts
 
 | Command | What it does |

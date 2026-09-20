@@ -8,6 +8,7 @@ import { Badge, Button, ErrorNotice } from "@/components/ui";
 import type { Rower } from "@/domain/types";
 import { setRowerActive } from "@/lib/actions/rowers";
 import { cn } from "@/lib/cn";
+import { classYearLabel } from "@/lib/format";
 
 import { RowerDialog } from "./rower-dialog";
 
@@ -18,7 +19,7 @@ export function RosterTable({ rowers, canEdit }: { rowers: Rower[]; canEdit: boo
   const [pending, start] = useTransition();
 
   const q = query.trim().toLowerCase();
-  const visible = rowers.filter((r) => (showInactive || r.active) && (!q || r.name.toLowerCase().includes(q) || r.squad?.toLowerCase().includes(q)));
+  const visible = rowers.filter((r) => (showInactive || r.active) && (!q || r.name.toLowerCase().includes(q) || String(r.class_year ?? "").includes(q)));
   const sweep = visible.filter((r) => !r.is_coxswain);
   const cox = visible.filter((r) => r.is_coxswain);
   const inactiveCount = rowers.filter((r) => !r.active).length;
@@ -72,8 +73,7 @@ function RosterRow({ r, canEdit, pending, toggleActive }: { r: Rower; canEdit: b
         <SideMark side={r.side} />
       )}
       <span className="min-w-0 flex-1 truncate">{r.name}</span>
-      {r.squad ? <Badge tone="outline" className="hidden sm:inline-flex">{r.squad}</Badge> : null}
-      {r.class_year ? <span className="tabular hidden text-xs text-text-3 sm:inline">{r.class_year}</span> : null}
+      {r.class_year ? <Badge tone="outline" className="tabular" title={`Class of ${r.class_year}`}>{classYearLabel(r.class_year)}</Badge> : null}
       <span className="tabular w-10 text-right text-xs text-text-3">{r.weight_kg ?? ""}</span>
       {canEdit ? (
         <span className="flex items-center">

@@ -31,3 +31,8 @@ export function kg(n: number, opts: { sign?: boolean } = {}) {
   const s = Number.isInteger(n) ? String(n) : n.toFixed(1);
   return opts.sign && n > 0 ? `+${s}` : s;
 }
+
+/** Class of 2027 renders as '27. */
+export function classYearLabel(year: number) {
+  return `'${String(year).slice(-2)}`;
+}

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { SIDES } from "@/domain/types";
+import { type Side, SIDES } from "@/domain/types";
 import { createClient } from "@/lib/supabase/server";
 
 import { type ActionResult, fail, ok } from "./result";
@@ -13,7 +13,6 @@ const rowerSchema = z.object({
   side: z.enum(SIDES),
   weight_kg: z.coerce.number().positive().max(200).nullable(),
   class_year: z.coerce.number().int().min(2000).max(2100).nullable(),
-  squad: z.string().trim().max(40).nullable(),
   is_coxswain: z.boolean(),
   can_steer: z.boolean(),
 });
@@ -27,7 +26,6 @@ function parse(formData: FormData) {
     side: isCox ? "both" : formData.get("side"),
     weight_kg: formData.get("weight_kg") || null,
     class_year: formData.get("class_year") || null,
-    squad: formData.get("squad") || null,
     is_coxswain: isCox,
     can_steer: formData.get("can_steer") === "on" || isCox,
   });
@@ -50,6 +48,15 @@ export async function updateRower(id: string, _prev: ActionResult | null, formDa
   const { error } = await supabase.from("rowers").update(parsed.data).eq("id", id);
   if (error) return fail(error);
   revalidatePath("/roster");
+  return ok(undefined);
+}
+
+export async function setRowerSide(id: string, side: Side): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("rowers").update({ side }).eq("id", id);
+  if (error) return fail(error);
+  revalidatePath("/roster");
+  revalidatePath("/sessions", "layout");
   return ok(undefined);
 }
 

@@ -4,7 +4,8 @@ import { useDroppable } from "@dnd-kit/core";
 import { Ban, Check, MoreHorizontal, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import type { Availability, AvailabilityStatus, Rower } from "@/domain/types";
+import { type Availability, type AvailabilityStatus, type Rower, type Side, SIDES } from "@/domain/types";
+import { AnchoredMenu, type MenuItem } from "@/components/menu";
 import { cn } from "@/lib/cn";
 
 import { RowerChip } from "./rower-chip";
@@ -17,9 +18,10 @@ export interface RosterSidebarProps {
   selectedRowerId: string | null;
   onChipClick: (rower: Rower) => void;
   onAvailability: (rower: Rower, status: AvailabilityStatus | null) => void;
+  onRowerSide: (rower: Rower, side: Side) => void;
 }
 
-export function RosterSidebar({ rowers, assignedIds, availability, canEdit, selectedRowerId, onChipClick, onAvailability }: RosterSidebarProps) {
+export function RosterSidebar({ rowers, assignedIds, availability, canEdit, selectedRowerId, onChipClick, onAvailability, onRowerSide }: RosterSidebarProps) {
   const [query, setQuery] = useState("");
   const { setNodeRef, isOver } = useDroppable({ id: "roster", disabled: !canEdit });
   const availByRower = useMemo(() => new Map(availability.map((a) => [a.rower_id, a])), [availability]);
@@ -30,7 +32,7 @@ export function RosterSidebar({ rowers, assignedIds, availability, canEdit, sele
   const sweep = free.filter((r) => !r.is_coxswain);
   const cox = free.filter((r) => r.is_coxswain);
   const unavailable = visible.filter((r) => availByRower.has(r.id));
-  const groupProps = { availByRower, assignedIds, canEdit, selectedRowerId, onChipClick, onAvailability };
+  const groupProps = { availByRower, assignedIds, canEdit, selectedRowerId, onChipClick, onAvailability, onRowerSide };
 
   return (
     <aside
@@ -71,12 +73,13 @@ function Group({
   selectedRowerId,
   onChipClick,
   onAvailability,
+  onRowerSide,
 }: {
   title: string;
   items: Rower[];
   dimmed?: boolean;
   availByRower: Map<string, Availability>;
-} & Pick<RosterSidebarProps, "assignedIds" | "canEdit" | "selectedRowerId" | "onChipClick" | "onAvailability">) {
+} & Pick<RosterSidebarProps, "assignedIds" | "canEdit" | "selectedRowerId" | "onChipClick" | "onAvailability" | "onRowerSide">) {
   if (items.length === 0) return null;
   return (
     <div>
@@ -104,7 +107,7 @@ function Group({
                   ) : null
                 }
               />
-              {canEdit ? <AvailabilityMenu status={a?.status ?? null} onChange={(s) => onAvailability(r, s)} /> : null}
+              {canEdit ? <RowerMenu rower={r} status={a?.status ?? null} onAvailability={(s) => onAvailability(r, s)} onSide={(side) => onRowerSide(r, side)} /> : null}
             </li>
           );
         })}
@@ -113,58 +116,56 @@ function Group({
   );
 }
 
-function AvailabilityMenu({ status, onChange }: { status: AvailabilityStatus | null; onChange: (s: AvailabilityStatus | null) => void }) {
-  const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null);
-  const open = anchor !== null;
-  const options: { value: AvailabilityStatus | null; label: string }[] = [
+function RowerMenu({
+  rower,
+  status,
+  onAvailability,
+  onSide,
+}: {
+  rower: Rower;
+  status: AvailabilityStatus | null;
+  onAvailability: (s: AvailabilityStatus | null) => void;
+  onSide: (side: Side) => void;
+}) {
+  const availability: { value: AvailabilityStatus | null; label: string }[] = [
     { value: null, label: "Available" },
     { value: "limited", label: "Limited" },
     { value: "out", label: "Out" },
   ];
+  const items: MenuItem[] = availability.map((o) => ({
+    key: `avail:${o.label}`,
+    label: o.label,
+    checked: status === o.value,
+    onSelect: () => {
+      if (o.value !== status) onAvailability(o.value);
+    },
+  }));
+  if (!rower.is_coxswain) {
+    SIDES.forEach((side, i) => {
+      items.push({
+        key: `side:${side}`,
+        label: side === "both" ? "Rows both" : `Rows ${side}`,
+        checked: rower.side === side,
+        group: i === 0,
+        onSelect: () => {
+          if (side !== rower.side) onSide(side);
+        },
+      });
+    });
+  }
   return (
-    <div className="relative shrink-0">
-      <button
-        type="button"
-        onClick={(e) => {
-          if (open) return setAnchor(null);
-          const r = e.currentTarget.getBoundingClientRect();
-          setAnchor({ top: r.bottom + 4, right: window.innerWidth - r.right });
-        }}
-        className="flex size-7 items-center justify-center rounded-md text-text-3 hover:bg-surface-2 hover:text-text"
-        aria-label="Availability"
-        aria-haspopup="menu"
-        aria-expanded={open}
-      >
-        <MoreHorizontal className="size-4" />
-      </button>
-      {open ? (
-        <>
-          <button type="button" className="fixed inset-0 z-10 cursor-default" aria-label="Close menu" onClick={() => setAnchor(null)} />
-          <ul
-            role="menu"
-            style={{ top: anchor.top, right: anchor.right }}
-            className="fixed z-20 w-32 overflow-hidden rounded-md border border-border bg-bg py-1 shadow-md"
-          >
-            {options.map((o) => (
-              <li key={o.label}>
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={status === o.value}
-                  onClick={() => {
-                    setAnchor(null);
-                    if (o.value !== status) onChange(o.value);
-                  }}
-                  className={cn("flex w-full items-center justify-between px-3 py-1.5 text-left text-sm hover:bg-surface", status === o.value && "font-medium")}
-                >
-                  {o.label}
-                  {status === o.value ? <Check className="size-3.5" aria-hidden /> : null}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-    </div>
+    <AnchoredMenu
+      items={items}
+      trigger={(props) => (
+        <button
+          type="button"
+          {...props}
+          className="flex size-7 items-center justify-center rounded-md text-text-3 hover:bg-surface-2 hover:text-text"
+          aria-label={`Options for ${rower.name}`}
+        >
+          <MoreHorizontal className="size-4" />
+        </button>
+      )}
+    />
   );
 }

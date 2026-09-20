@@ -101,6 +101,15 @@ test.describe("happy path", () => {
     await expect(boat(page, 1)).toContainText("5 open");
     await expect(boat(page, 1).locator('[data-flag="missing_cox"]')).toBeVisible();
 
+    // Re-rig: move the 6 oar to starboard, then restore the standard rig
+    await expect(boat(page, 1)).toHaveAttribute("data-rig", "standard");
+    await seat(page, 1, "6").getByRole("button", { name: /move oar to starboard/ }).click();
+    await expect(boat(page, 1)).toHaveAttribute("data-rig", "custom");
+    await expect(seat(page, 1, "6").getByRole("button", { name: /move oar to port/ })).toBeVisible();
+    await boat(page, 1).getByRole("button", { name: "Rigging, boat 1" }).click();
+    await page.getByRole("menuitem", { name: "Standard rig" }).click();
+    await expect(boat(page, 1)).toHaveAttribute("data-rig", "standard");
+
     const pieceOneId = await page.locator("[data-lineup-id]").getAttribute("data-lineup-id");
     expect(pieceOneId).toBeTruthy();
 
