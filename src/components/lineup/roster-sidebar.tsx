@@ -114,7 +114,8 @@ function Group({
 }
 
 function AvailabilityMenu({ status, onChange }: { status: AvailabilityStatus | null; onChange: (s: AvailabilityStatus | null) => void }) {
-  const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null);
+  const open = anchor !== null;
   const options: { value: AvailabilityStatus | null; label: string }[] = [
     { value: null, label: "Available" },
     { value: "limited", label: "Limited" },
@@ -124,7 +125,11 @@ function AvailabilityMenu({ status, onChange }: { status: AvailabilityStatus | n
     <div className="relative shrink-0">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          if (open) return setAnchor(null);
+          const r = e.currentTarget.getBoundingClientRect();
+          setAnchor({ top: r.bottom + 4, right: window.innerWidth - r.right });
+        }}
         className="flex size-7 items-center justify-center rounded-md text-text-3 hover:bg-surface-2 hover:text-text"
         aria-label="Availability"
         aria-haspopup="menu"
@@ -134,8 +139,12 @@ function AvailabilityMenu({ status, onChange }: { status: AvailabilityStatus | n
       </button>
       {open ? (
         <>
-          <button type="button" className="fixed inset-0 z-10 cursor-default" aria-label="Close menu" onClick={() => setOpen(false)} />
-          <ul role="menu" className="absolute right-0 z-20 mt-1 w-32 overflow-hidden rounded-md border border-border bg-bg py-1 shadow-md">
+          <button type="button" className="fixed inset-0 z-10 cursor-default" aria-label="Close menu" onClick={() => setAnchor(null)} />
+          <ul
+            role="menu"
+            style={{ top: anchor.top, right: anchor.right }}
+            className="fixed z-20 w-32 overflow-hidden rounded-md border border-border bg-bg py-1 shadow-md"
+          >
             {options.map((o) => (
               <li key={o.label}>
                 <button
@@ -143,7 +152,7 @@ function AvailabilityMenu({ status, onChange }: { status: AvailabilityStatus | n
                   role="menuitemradio"
                   aria-checked={status === o.value}
                   onClick={() => {
-                    setOpen(false);
+                    setAnchor(null);
                     if (o.value !== status) onChange(o.value);
                   }}
                   className={cn("flex w-full items-center justify-between px-3 py-1.5 text-left text-sm hover:bg-surface", status === o.value && "font-medium")}

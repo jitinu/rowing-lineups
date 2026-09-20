@@ -98,7 +98,8 @@ test.describe("happy path", () => {
     await expect(seat(page, 1, "6")).toContainText(r3);
 
     // Validation is non-blocking: boat 1 still reports open seats
-    await expect(boat(page, 1)).toContainText("6 open");
+    await expect(boat(page, 1)).toContainText("5 open");
+    await expect(boat(page, 1).locator('[data-flag="missing_cox"]')).toBeVisible();
 
     const pieceOneId = await page.locator("[data-lineup-id]").getAttribute("data-lineup-id");
     expect(pieceOneId).toBeTruthy();
