@@ -31,13 +31,19 @@ export function AnchoredMenu({
   align?: "left" | "right";
   className?: string;
 }) {
-  const [anchor, setAnchor] = useState<{ top: number; x: number } | null>(null);
+  const [anchor, setAnchor] = useState<{ y: number; up: boolean; x: number } | null>(null);
   const open = anchor !== null;
   const toggle = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     if (open) return setAnchor(null);
     const r = e.currentTarget.getBoundingClientRect();
-    setAnchor({ top: r.bottom + 4, x: align === "right" ? window.innerWidth - r.right : r.left });
+    // Open upward when the space below is short (roughly 7 rows at 32px).
+    const up = window.innerHeight - r.bottom < 224 && r.top > window.innerHeight - r.bottom;
+    setAnchor({
+      y: up ? window.innerHeight - r.top + 4 : r.bottom + 4,
+      up,
+      x: align === "right" ? window.innerWidth - r.right : r.left,
+    });
   };
   return (
     <div className={cn("relative shrink-0", className)}>
@@ -47,8 +53,8 @@ export function AnchoredMenu({
           <button type="button" className="fixed inset-0 z-10 cursor-default" aria-label="Close menu" onClick={(e) => { e.stopPropagation(); setAnchor(null); }} />
           <ul
             role="menu"
-            style={{ top: anchor.top, ...(align === "right" ? { right: anchor.x } : { left: anchor.x }) }}
-            className="fixed z-20 min-w-36 overflow-hidden rounded-md border border-border bg-bg py-1 shadow-md"
+            style={{ ...(anchor.up ? { bottom: anchor.y } : { top: anchor.y }), ...(align === "right" ? { right: anchor.x } : { left: anchor.x }) }}
+            className="fixed z-20 max-h-[60vh] min-w-36 overflow-y-auto rounded-md border border-border bg-bg py-1 shadow-md"
           >
             {items.map((it) => (
               <li key={it.key} className={cn(it.group && "mt-1 border-t border-border pt-1")}>
