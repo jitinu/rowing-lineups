@@ -30,8 +30,10 @@ import {
   reorderLineups,
   setPrimaryLineup,
   unassignSeat,
+  updateBoatConfig,
 } from "@/lib/actions/lineups";
 import type { ActionResult } from "@/lib/actions/result";
+import { setRowerSide } from "@/lib/actions/rowers";
 import { setAvailability } from "@/lib/actions/sessions";
 import type { SessionBundle } from "@/lib/queries";
 
@@ -202,6 +204,8 @@ export function LineupCanvas({ bundle, canEdit, initialLineupId }: LineupCanvasP
                   canEdit={canEdit}
                   selectedRowerId={selected}
                   onSeatClick={(seat, occupant) => onSeatClick(b, seat, occupant)}
+                  onRig={(rigging) => run(() => updateBoatConfig({ lineupId: active.id, boat: b, rigging }))}
+                  onRowerSide={(rower, side) => run(() => setRowerSide(rower.id, side))}
                   headerExtra={
                     canEdit && (seatsByBoat.get(b)?.size ?? 0) > 0 ? (
                       <Button
@@ -229,6 +233,7 @@ export function LineupCanvas({ bundle, canEdit, initialLineupId }: LineupCanvasP
               onAvailability={(rower: Rower, status: AvailabilityStatus | null) =>
                 run(() => setAvailability({ sessionId: session.id, rowerId: rower.id, status }))
               }
+              onRowerSide={(rower, side) => run(() => setRowerSide(rower.id, side))}
             />
           </div>
           <DragOverlay dropAnimation={null}>

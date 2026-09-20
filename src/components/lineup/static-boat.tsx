@@ -1,12 +1,12 @@
 import { Scale } from "lucide-react";
 
-import { SideMark } from "@/components/lineup/rower-chip";
 import type { BoatBalance } from "@/domain/balance";
-import { type BoatNumber, type Rigging, type Rower, type Seat, SEATS, seatLabel } from "@/domain/types";
+import { type BoatNumber, type Rigging, type Rower, type Seat, seatLabel } from "@/domain/types";
 import { cn } from "@/lib/cn";
 import { kg } from "@/lib/format";
 
-const STERN_TO_BOW: Seat[] = [...SEATS].reverse();
+import { BOW_TO_STERN, HullHeader, HullRow, Oar } from "./hull";
+import { SideMark } from "./rower-chip";
 
 /** Read-only boat rendering for share and compare screens. */
 export function StaticBoat({
@@ -30,14 +30,24 @@ export function StaticBoat({
         <span className="flex size-6 items-center justify-center rounded bg-text text-xs font-semibold text-bg">{boat}</span>
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{name || `Boat ${boat}`}</span>
       </header>
-      <ul className="divide-y divide-border/70">
-        {STERN_TO_BOW.map((seat) => {
+      <HullHeader />
+      <ul className="pb-1">
+        {BOW_TO_STERN.map((seat) => {
           const r = seats.get(seat);
           const expected = seat === "cox" ? null : rigging[seat];
+          const mismatch = !!r && !!expected && r.side !== "both" && r.side !== expected;
+          const oar = expected ? <Oar side={expected} mismatch={mismatch} label={`${seatLabel(seat)} rigged ${expected}`} /> : null;
           return (
-            <li key={seat} className={cn("flex h-9 items-center gap-2 px-3 text-sm", highlight?.has(seat) && "bg-accent-soft")}>
-              <span className="w-8 shrink-0 text-xs font-medium text-text-3">{seatLabel(seat)}</span>
-              <span className="w-4 shrink-0 text-center text-[10px] text-text-3">{expected ? expected[0].toUpperCase() : ""}</span>
+            <HullRow
+              key={seat}
+              seat={seat}
+              port={expected === "port" ? oar : null}
+              starboard={expected === "starboard" ? oar : null}
+              cellClassName={cn("h-9 text-sm", highlight?.has(seat) && "bg-accent-soft")}
+            >
+              <span className={cn("w-4 shrink-0 text-center text-xs font-semibold tabular", seat === "cox" ? "text-text-3" : "text-text-2")}>
+                {seat === "cox" ? "C" : seatLabel(seat)}
+              </span>
               {r ? (
                 <>
                   {r.is_coxswain ? null : <SideMark side={r.side} />}
@@ -47,7 +57,7 @@ export function StaticBoat({
               ) : (
                 <span className="text-xs text-text-3">Open</span>
               )}
-            </li>
+            </HullRow>
           );
         })}
       </ul>

@@ -78,12 +78,8 @@ function RowerForm({ rower, onClose }: { rower?: Rower; onClose: () => void }) {
               <Input id="weight_kg" name="weight_kg" type="number" step="0.1" min="30" max="200" inputMode="decimal" defaultValue={rower?.weight_kg ?? ""} />
             </div>
             <div>
-              <Label htmlFor="class_year">Class</Label>
+              <Label htmlFor="class_year">Class year</Label>
               <Input id="class_year" name="class_year" type="number" min="2000" max="2100" inputMode="numeric" defaultValue={rower?.class_year ?? ""} />
-            </div>
-            <div>
-              <Label htmlFor="squad">Squad</Label>
-              <Input id="squad" name="squad" defaultValue={rower?.squad ?? ""} maxLength={40} />
             </div>
           </div>
           {!isCox ? (

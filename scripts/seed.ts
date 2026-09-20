@@ -78,20 +78,18 @@ async function main() {
     name: `${first} ${LAST[i]}`,
     side: sideFor(i),
     weight_kg: 72 + ((i * 7) % 23) + (i % 3) * 0.5,
-    class_year: 2026 + (i % 4),
+    class_year: 2027 + (i % 4),
     is_coxswain: false,
     active: true,
-    squad: i < 16 ? "Varsity" : "JV",
     can_steer: false,
   }));
   const coxswains = ["Maya Chen", "Priya Nair", "Sofia Ruiz", "June Kim"].map((name, i) => ({
     name,
     side: "both" as Side,
     weight_kg: 50 + i,
-    class_year: 2026 + (i % 3),
+    class_year: 2027 + (i % 3),
     is_coxswain: true,
     active: true,
-    squad: i < 2 ? "Varsity" : "JV",
     can_steer: true,
   }));
   const { data: inserted, error: rowerErr } = await admin
