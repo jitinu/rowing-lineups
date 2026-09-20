@@ -1,7 +1,7 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import { Ban, Copy, Scale, TriangleAlert } from "lucide-react";
+import { Ban, Copy, Megaphone, Scale, TriangleAlert } from "lucide-react";
 
 import type { BoatBalance } from "@/domain/balance";
 import { type BoatNumber, type Rigging, type Rower, type Seat, SEATS, seatLabel } from "@/domain/types";
@@ -28,7 +28,8 @@ export interface BoatCardProps {
 
 export function BoatCard({ boat, name, rigging, seats, flags, balance, canEdit, selectedRowerId, onSeatClick, headerExtra }: BoatCardProps) {
   const boatFlags = flags.filter((f) => f.boat_number === boat && f.kind !== "empty_seat" && f.kind !== "missing_cox");
-  const empties = flags.filter((f) => f.boat_number === boat && (f.kind === "empty_seat" || f.kind === "missing_cox")).length;
+  const empties = flags.filter((f) => f.boat_number === boat && f.kind === "empty_seat").length;
+  const noCox = flags.some((f) => f.boat_number === boat && f.kind === "missing_cox");
   return (
     <section className="rounded-card border border-border bg-bg" aria-label={`Boat ${boat}`} data-boat={boat}>
       <header className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -67,6 +68,12 @@ export function BoatCard({ boat, name, rigging, seats, flags, balance, canEdit, 
         </span>
         <span className="ml-auto flex items-center gap-2">
           {empties > 0 ? <span className="text-text-3">{empties} open</span> : null}
+          {noCox ? (
+            <span className="inline-flex items-center gap-1 font-medium text-text" title="No cox" data-flag="missing_cox">
+              <Megaphone className="size-3.5" aria-hidden />
+              No cox
+            </span>
+          ) : null}
           {boatFlags.length > 0 ? (
             <span className="inline-flex items-center gap-1 font-medium text-text" title={`${boatFlags.length} flags`}>
               <TriangleAlert className="size-3.5" aria-hidden />

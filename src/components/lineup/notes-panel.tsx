@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button, ErrorNotice, Spinner, Textarea } from "@/components/ui";
@@ -51,8 +52,10 @@ function NoteCard({ coach, note, children, className }: { coach: Coach; note?: S
 }
 
 function MyNote({ sessionId, coach, note }: { sessionId: string; coach: Coach; note?: SessionNote }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(!note);
   const [draft, setDraft] = useState(note?.body ?? "");
+  const [saved, setSaved] = useState(note?.body ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -60,8 +63,10 @@ function MyNote({ sessionId, coach, note }: { sessionId: string; coach: Coach; n
     setError(null);
     start(async () => {
       const res = await upsertMyNote(sessionId, draft);
-      if (!res.ok) setError(res.error);
-      else setEditing(false);
+      if (!res.ok) return setError(res.error);
+      setSaved(draft.trim());
+      setEditing(false);
+      router.refresh();
     });
   }
 
@@ -79,19 +84,19 @@ function MyNote({ sessionId, coach, note }: { sessionId: string; coach: Coach; n
           />
           {error ? <ErrorNotice message={error} /> : null}
           <div className="flex justify-end gap-2">
-            {note ? (
-              <Button size="sm" variant="ghost" onClick={() => { setDraft(note.body); setEditing(false); }} disabled={pending}>
+            {saved ? (
+              <Button size="sm" variant="ghost" onClick={() => { setDraft(saved); setEditing(false); }} disabled={pending}>
                 Cancel
               </Button>
             ) : null}
-            <Button size="sm" variant="primary" onClick={save} disabled={pending || (!note && !draft.trim())}>
+            <Button size="sm" variant="primary" onClick={save} disabled={pending || (!saved && !draft.trim())}>
               {pending ? <Spinner className="text-on-accent" /> : "Save"}
             </Button>
           </div>
         </div>
       ) : (
         <div className="flex flex-1 flex-col">
-          <p className="flex-1 whitespace-pre-wrap text-sm text-text-2">{note?.body}</p>
+          <p className="flex-1 whitespace-pre-wrap text-sm text-text-2">{saved}</p>
           <div className="mt-2 flex justify-end">
             <Button size="sm" variant="ghost" onClick={() => setEditing(true)} aria-label="Edit note">
               <Pencil className="size-3.5" aria-hidden />

@@ -187,7 +187,7 @@ export function LineupCanvas({ bundle, canEdit, initialLineupId }: LineupCanvasP
           action={canEdit ? <Button variant="primary" onClick={lineupActions.onCreate} disabled={pending}>New lineup</Button> : undefined}
         />
       ) : (
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging(null)}>
+        <DndContext id="lineup-dnd" sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging(null)}>
           <div className="grid gap-4 lg:grid-cols-[1fr_16rem]">
             <div className="grid gap-3 sm:grid-cols-2" data-lineup-id={active.id}>
               {BOAT_NUMBERS.map((b) => (
